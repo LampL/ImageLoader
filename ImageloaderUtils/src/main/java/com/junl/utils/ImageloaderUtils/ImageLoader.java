@@ -14,31 +14,27 @@ import java.util.concurrent.Executors;
 
 public class ImageLoader {
     //图片缓存
-    LruCache<String, Bitmap> mImageCache;
+    ImageCache mImageCache = new ImageCache();
     //线程池，线程池数量为 CPU 的数量
     ExecutorService mExecutorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     //UI Handler
     Handler mUIHandler = new Handler(Looper.getMainLooper());
 
-    public ImageLoader() {
-        initImageCache();
-    }
-
-    private void initImageCache() {
-        //计算可使用的最大内存
-        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
-        //取四分之一的可用内存作为缓存
-        final int cacheSize = maxMemory / 4;
-
-        mImageCache = new LruCache<String, Bitmap>(cacheSize) {
+    private void updateImageView(final ImageView imageView, final Bitmap bitmap) {
+        mUIHandler.post(new Runnable() {
             @Override
-            protected int sizeOf(String key, Bitmap bitmap) {
-                return bitmap.getRowBytes() * bitmap.getHeight() / 1024;
+            public void run() {
+                imageView.setImageBitmap(bitmap);
             }
-        };
+        });
     }
 
     public void displayImage(final String url, final ImageView imageView) {
+        Bitmap bitmap = mImageCache.get(url);
+        if(bitmap != null){
+            imageView.setImageBitmap(bitmap);
+        }
+
         imageView.setTag(url);
         mExecutorService.submit(new Runnable() {
             @Override
@@ -51,15 +47,6 @@ public class ImageLoader {
                     updateImageView(imageView, bitmap);
                 }
                 mImageCache.put(url, bitmap);
-            }
-        });
-    }
-
-    private void updateImageView(final ImageView imageView, final Bitmap bitmap) {
-        mUIHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                imageView.setImageBitmap(bitmap);
             }
         });
     }
