@@ -13,8 +13,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ImageLoader {
-    //图片缓存
+    //内存缓存
     ImageCache mImageCache = new ImageCache();
+    //SD 卡缓存
+    DiskCache mDiskcache = new DiskCache();
+    //是否使用 sd 卡缓存
+    boolean isUseDiskCache = false;
     //线程池，线程池数量为 CPU 的数量
     ExecutorService mExecutorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     //UI Handler
@@ -30,8 +34,8 @@ public class ImageLoader {
     }
 
     public void displayImage(final String url, final ImageView imageView) {
-        Bitmap bitmap = mImageCache.get(url);
-        if(bitmap != null){
+        Bitmap bitmap = isUseDiskCache ? mDiskcache.get(url) : mImageCache.get(url);
+        if (bitmap != null) {
             imageView.setImageBitmap(bitmap);
         }
 
@@ -62,5 +66,9 @@ public class ImageLoader {
             e.printStackTrace();
         }
         return bitmap;
+    }
+
+    public void useDiskCache(boolean useDiskCache) {
+        isUseDiskCache = useDiskCache;
     }
 }

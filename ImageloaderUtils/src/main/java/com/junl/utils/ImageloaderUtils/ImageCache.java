@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.util.LruCache;
 
 public class ImageCache {
+    // 图片 LRU 缓存
     LruCache<String, Bitmap> mImageCache;
 
     public ImageCache() {
