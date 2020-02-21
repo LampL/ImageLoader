@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.LruCache;
 import android.widget.ImageView;
 
 import java.net.HttpURLConnection;
@@ -17,8 +16,12 @@ public class ImageLoader {
     ImageCache mImageCache = new ImageCache();
     //SD 卡缓存
     DiskCache mDiskcache = new DiskCache();
+    // 双缓存
+    DoubleCache mDoubleCache = new DoubleCache();
     //是否使用 sd 卡缓存
     boolean isUseDiskCache = false;
+    // 使用双缓存
+    boolean isUseDoubleCache = false;
     //线程池，线程池数量为 CPU 的数量
     ExecutorService mExecutorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     //UI Handler
@@ -34,7 +37,14 @@ public class ImageLoader {
     }
 
     public void displayImage(final String url, final ImageView imageView) {
-        Bitmap bitmap = isUseDiskCache ? mDiskcache.get(url) : mImageCache.get(url);
+        Bitmap bitmap = null;
+        if (isUseDoubleCache) {
+            bitmap = mDoubleCache.get(url);
+        } else if (isUseDiskCache) {
+            bitmap = mDiskcache.get(url);
+        } else {
+            bitmap = mImageCache.get(url);
+        }
         if (bitmap != null) {
             imageView.setImageBitmap(bitmap);
         }
@@ -70,5 +80,9 @@ public class ImageLoader {
 
     public void useDiskCache(boolean useDiskCache) {
         isUseDiskCache = useDiskCache;
+    }
+
+    public void useDoubleCache(boolean useDoubleCache) {
+        isUseDoubleCache = useDoubleCache;
     }
 }
